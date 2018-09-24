@@ -745,7 +745,6 @@ func (c *Competition) GetBFData() {
 
 // 	c.KailiWin, c.KailHe, c.KailiLoss = strconv.FormatFloat(win/31, 'f', 10, 64), strconv.FormatFloat(he/31, 'f', 10, 64), strconv.FormatFloat(loss/31, 'f', 10, 64)
 // }
-
 func GET(url string, cookie string) string {
 	fmt.Println("url:", url)
 	client := &http.Client{Timeout: time.Second * 1}
