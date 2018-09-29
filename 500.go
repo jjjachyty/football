@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
@@ -20,6 +21,7 @@ type Match struct {
 	Score       string //比分
 	LeagueMatch string //联赛
 	Rotation    string //轮次
+	Date        time.Time
 }
 
 type OuZhi struct {
@@ -78,7 +80,7 @@ var cookie = `sdc_session=1537535875941; _jzqc=1; _jzqy=1.1537535876.1537535876.
 var matchs = make([]Match, 0)
 var OuZhis = make([]OuZhi, 0)
 var YaZhis = make([]YaZhi, 0)
-var BiFa = new(TouZhu)
+var BiFas = make([]TouZhu, 0)
 
 var times = []string{"2018-09-10"}
 
@@ -92,26 +94,31 @@ func main() {
 	fmt.Println("一共", count, "场比赛")
 
 	for i, _ := range matchs {
-		fmt.Println("开始抓取%d场,剩余%d", i, count-i)
-		matchs[i].OuZhi()
-		matchs[i].Bifar()
-		matchs[i].YaZhi()
+		if i == 0 {
+			fmt.Println("开始抓取%d场,剩余%d", i, count-i)
+			matchs[i].OuZhi()
+			matchs[i].Bifar()
+			matchs[i].YaZhi()
+		}
 	}
 
-	fmt.Println(matchs)
+	InserMatch(matchs)
+	InserOuZhi(OuZhis)
+	InserYaZhi(YaZhis)
+	InserBiFar(BiFas)
 
 }
 
 //
-func GetMatchs(time string) {
+func GetMatchs(matchTime string) {
 
-	html := GET(fmt.Sprintf(oddsUrl, time), cookie)
+	html := GET(fmt.Sprintf(oddsUrl, matchTime), cookie)
 	htmlcode := strings.NewReader(GBK2UTF8(html))
 	doc, _ := goquery.NewDocumentFromReader(htmlcode)
 	doc.Find("#main-tbody").Find("tr").Each(func(i int, tr *goquery.Selection) {
 		if i%2 == 0 {
 			var match Match
-
+			match.Date, _ = time.Parse("2006-01-02", matchTime)
 			id, _ := tr.Attr("data-fid")
 			match.ID = id
 			tr.Find("td").Each(func(j int, td *goquery.Selection) {
@@ -207,7 +214,7 @@ func GBK2UTF8(gbk string) string {
 }
 
 func (match *Match) Bifar() {
-
+	var BiFa TouZhu
 	html := GET(fmt.Sprintf(touzhuUrl, match.ID), cookie)
 	htmlcode := strings.NewReader(GBK2UTF8(html))
 	doc, _ := goquery.NewDocumentFromReader(htmlcode)
@@ -230,6 +237,7 @@ func (match *Match) Bifar() {
 		}
 
 	})
+	BiFas = append(BiFas, BiFa)
 }
 
 //yazhiUrl

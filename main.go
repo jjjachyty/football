@@ -93,7 +93,7 @@ var hasError = false
 func main() {
 	//GetTeams()
 	// var dates = []string{"20180915", "20180914", "20180913", "20180912", "20180911", "20180910", "20180909", "20180908", "20180907"}
-	var dates = []string{"20180916", "20180915"}
+	var dates = []string{"20180916"}
 	for _, date := range dates {
 		url := "http://www.win0168.com/football/hg/Over_" + date + ".htm"
 
