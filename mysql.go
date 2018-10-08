@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,85 +18,106 @@ func init() {
 }
 
 func InserMatch(matchs []Match) {
-	fmt.Println("InserMatch-----------")
-	stmt, err := DB.Prepare("insert into matchs values(?,?,?,?,?,?,?,?)")
+	stmt, err := DB.Prepare("insert into matchs values(?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if nil == err {
 		for _, match := range matchs {
-			_, err := stmt.Exec(match.ID, match.HName, match.VName, match.Score, match.LeagueMatch, match.Rotation, match.Date)
-			if nil != err {
-				panic("insert into match error")
+			scors := strings.Split(match.Score, ":")
+			if len(scors) > 1 {
+				_, err := stmt.Exec(match.Date, match.ID, match.HName, match.VName, match.LeagueMatch, match.Rotation, match.HRanking, match.HScoring, match.VRanking, match.VScoring, scors[0], scors[1], "")
+				if nil != err {
+					// panic(err)
+					continue
+
+					// panic(err)
+				}
 			}
 		}
 
 	} else {
-		fmt.Println(err)
+		fmt.Println("InserMatch:", err)
 	}
 }
 
 func InserOuZhi(ouzhis []OuZhi) {
-	stmt, err := DB.Prepare("insert into ouzhi values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := DB.Prepare("insert into ouzhi values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if nil == err {
 		for _, ouzhi := range ouzhis {
+			if "" == ouzhi.BeginWinRate {
+				continue
+			}
 			_, err := stmt.Exec(ouzhi.ID, ouzhi.Name,
 				ouzhi.BeginWinRate,
-				ouzhi.BeginWinPD,
+				strings.TrimRight(ouzhi.BeginWinPD, "%"),
 				ouzhi.BeginDrawRate,
-				ouzhi.BeginDrawPD,
+				strings.TrimRight(ouzhi.BeginDrawPD, "%"),
 				ouzhi.BeginLossRate,
-				ouzhi.BeginLossPD,
-				ouzhi.BeginReturn,
+				strings.TrimRight(ouzhi.BeginLossPD, "%"),
+				strings.TrimRight(ouzhi.BeginReturn, "%"),
 				ouzhi.BeginWinKaili,
 				ouzhi.BeginDrawKaili,
 				ouzhi.BeginLossKaili,
 				ouzhi.EndWinRate,
-				ouzhi.EndWinPD,
+				strings.TrimRight(ouzhi.EndWinPD, "%"),
 				ouzhi.EndDrawRate,
-				ouzhi.EndDrawPD,
+				strings.TrimRight(ouzhi.EndDrawPD, "%"),
 				ouzhi.EndLossRate,
-				ouzhi.EndDrawPD,
-				ouzhi.EndLossRate,
-				ouzhi.EndLossPD,
-				ouzhi.EndReturn,
+				strings.TrimRight(ouzhi.EndLossPD, "%"),
+				strings.TrimRight(ouzhi.EndReturn, "%"),
 				ouzhi.EndWinKaili,
 				ouzhi.EndDrawKaili,
 				ouzhi.EndLossKaili,
+				"",
+				"",
+				"",
 			)
 			if nil != err {
+				continue
+				// fmt.Println(err)
+				// fmt.Println("---", ouzhi.BeginWinRate)
 				panic(err)
+
 			}
 		}
 
 	} else {
-		fmt.Println(err)
+		fmt.Println("InserOuZhi:", err)
 	}
 }
 
 func InserYaZhi(yazhis []YaZhi) {
-	stmt, err := DB.Prepare("insert into yazhi values(?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := DB.Prepare("insert into yazhi values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if nil == err {
 		for _, yazhi := range yazhis {
-			_, err := stmt.Exec(yazhi.ID, yazhi.Name, yazhi.BeginHWater, yazhi.BeginPan, yazhi.BeginVWater, yazhi.EndHWater, yazhi.EndHWaterDirection, yazhi.EndPan, yazhi.EndPanState, yazhi.EndVWater, yazhi.EndVWaterDirection)
+			_, err := stmt.Exec(yazhi.ID, yazhi.Name, yazhi.BeginHWater, yazhi.BeginPan, yazhi.BeginVWater, yazhi.EndHWater, yazhi.EndHWaterDirection, yazhi.EndPan, yazhi.EndPanState, yazhi.EndVWater, yazhi.EndVWaterDirection, "", "", "")
 			if nil != err {
-				panic("insert into yazhi error")
+				// fmt.Println()
+				// panic(err)
+				continue
 			}
 		}
 
 	} else {
-		fmt.Println(err)
+		fmt.Println("InserYaZhi:", err)
 	}
 }
 func InserBiFar(bifas []TouZhu) {
-	stmt, err := DB.Prepare("insert into bifar values(?,?,?,?,?,?,?)")
+	stmt, err := DB.Prepare("insert into bifar values(?,?,?,?,?,?,?,?)")
 	if nil == err {
 		for _, bifa := range bifas {
-			_, err := stmt.Exec(bifa.ID, bifa.DealerWin, bifa.DealerDraw, bifa.DealerLoss, bifa.WinIndex, bifa.DrawIndex, bifa.LossIndex)
+			_, err := stmt.Exec(bifa.ID,
+				strings.Replace(bifa.DealerWin, ",", "", -1),
+				strings.Replace(bifa.DealerDraw, ",", "", -1),
+				strings.Replace(bifa.DealerLoss, ",", "", -1),
+				bifa.WinIndex, bifa.DrawIndex, bifa.LossIndex, "")
 			if nil != err {
-				panic(err)
+				// panic(err)
+				continue
+
 			}
 		}
 
 	} else {
-		fmt.Println(err)
+		fmt.Println("InserBiFar:", err)
 	}
 }
 

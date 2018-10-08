@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Luxurioust/excelize"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
 )
@@ -22,6 +24,13 @@ type Match struct {
 	LeagueMatch string //联赛
 	Rotation    string //轮次
 	Date        time.Time
+	ScoreH      string
+	ScoreV      string
+	Result      string
+	HRanking    string
+	VRanking    string //客队排名
+	HScoring    string //主队积分
+	VScoring    string
 }
 
 type OuZhi struct {
@@ -74,6 +83,23 @@ type TouZhu struct {
 	DrawIndex string
 	LossIndex string
 }
+type Ranking struct {
+	Ranking1 string
+	Name1    string
+	Scoring1 string
+
+	Ranking2 string
+	Name2    string
+	Scoring2 string
+}
+
+type BiFen struct {
+	Name  string
+	Hwin  string
+	VWin  string
+	Draw  string
+	Score string
+}
 
 var MatchData = new(Match)
 var cookie = `sdc_session=1537535875941; _jzqc=1; _jzqy=1.1537535876.1537535876.1.jzqsr=baidu.-; __utmc=63332592; __utmz=63332592.1537535877.1.1.utmcsr=baidu|utmccn=(organic)|utmcmd=organic; ck_RegUrl=trade.500.com; appform=1; bdshare_firstime=1537536082256; ck_user=MTU1MjAwMTAwMDk%3D; ck_user2=MTU1MjAwMTAwMDk%3D; ck_RegFromUrl=https%3A//www.baidu.com/link%3Furl%3Dojv-2sXkKqB9vUmBoL0kUfqLJX3yYK2iaPCl_6_WLXS%26wd%3D%26eqid%3Df3646a0500024697000000065ba5913f; seo_key=baidu%7C%7Chttps://www.baidu.com/link?url=ojv-2sXkKqB9vUmBoL0kUfqLJX3yYK2iaPCl_6_WLXS&wd=&eqid=f3646a0500024697000000065ba5913f; Hm_lvt_4f816d475bb0b9ed640ae412d6b42cab=1537535876,1537577300; btn_follow=-1; op_chupan=1; _jzqx=1.1537576510.1537711878.5.jzqsr=odds%2E500%2Ecom|jzqct=/fenxi/rangqiu-730460%2Eshtml.jzqsr=odds%2E500%2Ecom|jzqct=/europe_jczq_2018-09-22%2Eshtml; _jzqckmp=1; usercheck=MzA0NDc4MTEyOGIxYzYzYTU2NGU1MWQwNzFiYmRjMDI4M2JhMTExOA%3D%3D; _jzqa=1.547320212841500200.1537535876.1537711878.1537766696.9; __utma=63332592.1738223105.1537535877.1537711891.1537766697.9; __utmt=1; motion_id=1537767483081_0.881682107095074; WT_FPC=id=undefined:lv=1537767531464:ss=1537766696246; sdc_userflag=1537766696251::1537767531471::6; _qzja=1.1025932337.1537535916302.1537711877086.1537766696284.1537767336167.1537767531514.0.0.0.962.9; _qzjb=1.1537766696284.6.0.0.0; _qzjc=1; _qzjto=94.1.0; _jzqb=1.6.10.1537766696.1; Hm_lpvt_4f816d475bb0b9ed640ae412d6b42cab=1537767532; __utmb=63332592.6.10.1537766697; CLICKSTRN_ID=111.10.136.74-1537535876.226933::8E3BA998695510A86EA5DA5F1DC17237`
@@ -81,32 +107,124 @@ var matchs = make([]Match, 0)
 var OuZhis = make([]OuZhi, 0)
 var YaZhis = make([]YaZhi, 0)
 var BiFas = make([]TouZhu, 0)
-
-var times = []string{"2018-09-10"}
+var FetchCount = 0
+var times = []string{"2018-10-02"}
+var Hwins = make([]string, 0)
+var Vwins = make([]string, 0)
+var Darws = make([]string, 0)
 
 func main() {
 	// MatchData.ID = "762333"
 
-	for _, time := range times {
-		GetMatchs(time)
-	}
-	count := len(matchs)
-	fmt.Println("一共", count, "场比赛")
+	// for _, time := range times {
+	// 	GetMatchs(time)
+	// }
+	// // matchs = matchs[:1]
+	// count := len(matchs)
+	// fmt.Println("一共", count, "场比赛")
+	// init500()
+	GetBoDan()
 
-	for i, _ := range matchs {
-		if i == 0 {
-			fmt.Println("开始抓取%d场,剩余%d", i, count-i)
-			matchs[i].OuZhi()
-			matchs[i].Bifar()
-			matchs[i].YaZhi()
+}
+
+func GetBoDan() {
+	var url = "http://odds.500.com/fenxi/bifen-713609.shtml"
+	html := GET(url, cookie)
+	htmlcode := strings.NewReader(GBK2UTF8(html))
+	doc, _ := goquery.NewDocumentFromReader(htmlcode)
+
+	doc.Find(".pub_table").Find("tbody").Find("tr").Each(func(i int, tr *goquery.Selection) {
+		if i > 0 {
+
+			tr.Find("td").Each(func(j int, td *goquery.Selection) {
+				if j > 2 {
+
+					fmt.Print(td.Text())
+					hwin := td.Find("span").Text()
+					fmt.Print("---", hwin)
+					if "" != hwin {
+						vwin := strings.Split(td.Text(), hwin)[1]
+						if "" == vwin {
+							vwin = hwin
+						}
+						fmt.Println("/", vwin)
+
+						Hwins = append(Hwins, hwin)
+
+						Vwins = append(Vwins, vwin)
+					} else {
+						Darws = append(Darws, td.Text())
+					}
+				}
+			})
 		}
+	})
+	var xlsx = excelize.NewFile()
+	var axis = 64
+	var line = 0
+	var row int
+	for i, hwin := range Hwins {
+		line++
+		if i%10 == 0 {
+			line = 1
+			row++
+		}
+
+		xlsx.SetCellValue("Sheet1", string(axis+line)+strconv.Itoa(row), hwin)
+
 	}
 
+	axis = 75
+	line = 0
+	row = 0
+	for i, vwin := range Vwins {
+		line++
+		if i%10 == 0 {
+			line = 1
+			row++
+		}
+
+		xlsx.SetCellValue("Sheet1", string(axis+line)+strconv.Itoa(row), vwin)
+
+	}
+
+	axis = 85
+	line = 0
+	row = 0
+	for i, darws := range Darws {
+		line++
+		if i%5 == 0 {
+			line = 1
+			row++
+		}
+
+		xlsx.SetCellValue("Sheet1", string(axis+line)+strconv.Itoa(row), darws)
+
+	}
+	xlsx.SaveAs("./bifen.xlsx")
+
+}
+
+func init500() {
+	defer func() {
+		if r := recover(); nil != r {
+			fmt.Println(r)
+			init500()
+		}
+	}()
+	count := len(matchs)
+	for i := FetchCount; i < len(matchs); i++ {
+		fmt.Printf("开始抓取%d场,剩余%d\n", i, count-i)
+		matchs[i].OuZhi()
+		matchs[i].Bifar()
+		matchs[i].YaZhi()
+		FetchCount = i + 1
+
+	}
 	InserMatch(matchs)
 	InserOuZhi(OuZhis)
 	InserYaZhi(YaZhis)
 	InserBiFar(BiFas)
-
 }
 
 //
@@ -146,6 +264,41 @@ func (match *Match) OuZhi() {
 	html := GET(fmt.Sprintf(ouzhiUrl, match.ID), cookie)
 	htmlcode := strings.NewReader(GBK2UTF8(html))
 	doc, _ := goquery.NewDocumentFromReader(htmlcode)
+	//排名和积分
+	var ranking Ranking
+	doc.Find(".jfb_this").Find("td").Each(func(i int, td *goquery.Selection) {
+		value := td.Text()
+		switch i {
+		case 0:
+			ranking.Ranking1 = value
+		case 1:
+			ranking.Name1 = value
+		case 2:
+			ranking.Scoring1 = value
+		case 3:
+			ranking.Ranking2 = value
+		case 4:
+			ranking.Name2 = value
+		case 5:
+			ranking.Scoring2 = value
+		}
+	})
+	if strings.TrimSpace(ranking.Name1) == strings.TrimSpace(match.HName) { //主队
+		match.HRanking = ranking.Ranking1
+		match.HScoring = ranking.Scoring1
+
+		match.VRanking = ranking.Ranking2
+		match.VScoring = ranking.Scoring2
+
+	} else {
+		match.HRanking = ranking.Ranking2
+		match.HScoring = ranking.Scoring2
+
+		match.VRanking = ranking.Ranking1
+		match.VScoring = ranking.Scoring1
+	}
+
+	//欧指
 	doc.Find("#datatb").Find("tr").Each(func(i int, tr *goquery.Selection) {
 		var ouzhi OuZhi
 		tr.Find("td").Each(func(j int, td *goquery.Selection) {
@@ -200,7 +353,9 @@ func (match *Match) OuZhi() {
 			}
 
 		})
-		OuZhis = append(OuZhis, ouzhi)
+		if ouzhi.BeginWinRate != "" {
+			OuZhis = append(OuZhis, ouzhi)
+		}
 	})
 	// match.OuZhis = ouzhis
 }
@@ -215,6 +370,7 @@ func GBK2UTF8(gbk string) string {
 
 func (match *Match) Bifar() {
 	var BiFa TouZhu
+	BiFa.ID = match.ID
 	html := GET(fmt.Sprintf(touzhuUrl, match.ID), cookie)
 	htmlcode := strings.NewReader(GBK2UTF8(html))
 	doc, _ := goquery.NewDocumentFromReader(htmlcode)
@@ -237,7 +393,9 @@ func (match *Match) Bifar() {
 		}
 
 	})
-	BiFas = append(BiFas, BiFa)
+	if BiFa.DealerWin != "" {
+		BiFas = append(BiFas, BiFa)
+	}
 }
 
 //yazhiUrl
@@ -248,7 +406,7 @@ func (match *Match) YaZhi() {
 	doc, _ := goquery.NewDocumentFromReader(htmlcode)
 	doc.Find("#datatb").Find("tr").Each(func(i int, tr *goquery.Selection) {
 		var yazhi YaZhi
-
+		yazhi.ID = match.ID
 		tr.Find("td").Each(func(j int, td *goquery.Selection) {
 			yazhi.ID = match.ID
 			switch j {

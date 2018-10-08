@@ -93,23 +93,23 @@ var hasError = false
 func main() {
 	//GetTeams()
 	// var dates = []string{"20180915", "20180914", "20180913", "20180912", "20180911", "20180910", "20180909", "20180908", "20180907"}
-	var dates = []string{"20180916"}
-	for _, date := range dates {
-		url := "http://www.win0168.com/football/hg/Over_" + date + ".htm"
+	// var dates = []string{"20180916"}
+	// for _, date := range dates {
+	// 	url := "http://www.win0168.com/football/hg/Over_" + date + ".htm"
 
-		GetScore1(url)
+	// 	GetScore1(url)
 
-	}
-	// GetScore1()
-	// GetTodayVS()
-	fmt.Println("一共有%d场记录", len(Copms))
-	// fmt.Println(Copms)
-	//
-	//
-	// Copms = Copms[:1]
-	// Copms = append(Copms, Competition{VSID: "1503897"})
-	GetData(0)
-	WriteExcel()
+	// }
+	// // GetScore1()
+	// // GetTodayVS()
+	// fmt.Println("一共有%d场记录", len(Copms))
+	// // fmt.Println(Copms)
+	// //
+	// //
+	// // Copms = Copms[:1]
+	// // Copms = append(Copms, Competition{VSID: "1503897"})
+	// GetData(0)
+	// WriteExcel()
 	// fmt.Println(Copms[0].VSID, Copms[0].HWinPercent)
 	// fmt.Println(com.BfWin, com.BfWinWantBuy, com.BfWinWantSell)
 	// fmt.Println(com.BfHe, com.BfDrawWantBuy, com.BfDrawWantSell)
