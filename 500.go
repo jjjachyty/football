@@ -9,6 +9,7 @@ import (
 	"github.com/Luxurioust/excelize"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
+	"github.com/tidwall/gjson"
 )
 
 var oddsUrl = "http://odds.500.com/europe_jczq_%s.shtml"
@@ -125,6 +126,26 @@ func main() {
 	// init500()
 	GetBoDan()
 
+}
+
+func GetLeagueMatchMatchs(sid string) {
+	for i := 1; i < 100; i++ {
+		url := fmt.Sprintf("http: //liansai.500.com/index.php?c=match&a=getmatch&sid=%s&round=%d", sid, i)
+		json := GET(url, cookie)
+		result := gjson.Parse(json).Array()
+		for _, rs := range result {
+			status := rs.Get("status")
+			fid := rs.Get("fid")
+			hsxname := rs.Get("hsxname")
+			hscore := rs.Get("hscore")
+			gsxname := rs.Get("gsxname")
+			gscore := rs.Get("gscore")
+			if status == 5 {
+				matchs = append(matchs, Match{ID: fid, HName: hsxname, VName: gsxname})
+			}
+
+		}
+	}
 }
 
 func GetBoDan() {
